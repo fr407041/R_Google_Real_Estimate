@@ -1,0 +1,14 @@
+library(geoR)
+## Not run:
+# Defining a prediction grid
+loci <- expand.grid(seq(0,1,l=21), seq(0,1,l=21))
+# predicting by ordinary kriging
+kc <- krige.conv(s100, loc=loci,
+                 krige=krige.control(cov.pars=c(1, .25)))
+# mapping point estimates and variances
+par.ori <- par(no.readonly = TRUE)
+par(mfrow=c(1,2), mar=c(3.5,3.5,1,0), mgp=c(1.5,.5,0))
+image(kc, main="kriging estimates")
+image(kc, val=sqrt(kc$krige.var), main="kriging std. errors")
+
+

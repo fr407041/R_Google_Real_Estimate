@@ -1,6 +1,5 @@
 rm(list=ls())
 library(RgoogleMaps)
-source("C:\\Users\\leon\\Documents\\GitHub\\R_Google_Real_Estimate\\Sub Code\\Kringing_Revise.R")
 data  = data.frame(read.csv( 'D:\\参璸╯\\20140712/A_lvr_land_A.csv',header=T))
 #colnames(data)
 #data[1:2,]
@@ -13,7 +12,6 @@ draw.data = draw.data[which(draw.data$常カㄏノだ跋%in%""),]
 
 lat = NULL
 lon = NULL
-zoom = 13
 col = NULL
 data = NULL
 location = NA
@@ -32,36 +30,49 @@ location = NA
   }
 address = "籓カゅ跋"
 location = getGeoCode(URLencode( iconv(address,to='UTF-8') ),verbose=1)
-DefineMap <- GetMap(center=location, zoom=zoom, destfile = "Taipei_Address.png");
+DefineMap <- GetMap(center=location, zoom=13, destfile = "Taipei_Address.png");
 par(cex=1.5)
+  if(0) {
+PlotOnStaticMap(DefineMap, 
+                destfile = "Taipei_Mark_Address.png", cex=1.5,pch=20,
+                add=FALSE);
+
+
+  PlotOnStaticMap(DefineMap, 
+                  lat = lat,
+                  lon = lon,
+                  destfile = "Taipei_Mark_Address.png", cex=1.5,pch=20,
+                  col=col, add=FALSE)
+  }
 lat.lon.map = data.frame( "latitude" = lat,
                           "longitude" = lon,
                           "dollars" = as.numeric(draw.data$虫基–キよそへ)
                           )
+
 tmp = LatLon2XY.centered(MyMap = DefineMap, 
                    lat = lat, 
                    lon = lon, 
-                   zoom = zoom)
+                   zoom = 13)
+
 lat.lon.map = data.frame( lat.lon.map , "x" = tmp$newX , "y" = tmp$newY )
 lat.lon.map = na.exclude(lat.lon.map)
 
 lat.lon.map.tmp = aggregate(lat.lon.map$dollars,list(lat.lon.map$x,lat.lon.map$y),mean)
 colnames(lat.lon.map.tmp) = c( "x" , "y" , "dollars" ) 
 
-#######################points( 121.6 , 25  )
+#######################
 library(kriging)
-#library(fields)
-p <- list(data.frame(lat.lon.map.tmp[,c("x","y")]))
-kriged <- kriging2(x=lat.lon.map.tmp$x, 
+kriged <- kriging(x=lat.lon.map.tmp$x, 
                   y=lat.lon.map.tmp$y, 
                   response=lat.lon.map.tmp$dollars, 
-                  #polygons = p,
-                   polygons = NULL,
-                  pixels=100)
+                  pixels=300)
+image.plot(kriged, 
+           xlim = extendrange(lat.lon.map.tmp$x), 
+           ylim = extendrange(lat.lon.map.tmp$y), 
+           zlim=range(lat.lon.map.tmp$dollars)
+           )
+#######################
 
-#PlotOnStaticMap(DefineMap, 
-#                destfile = "Taipei_Mark_Address.png", cex=1.5,pch=20,
-#                add=FALSE);
 #key.entries = round(quantile(draw.data$虫基–キよそへ, (1:6)/6),0)
 #key.entries = round(exp( quantile( log( draw.data$虫基–キよそへ ) , (1:7)/7 ) ),0)
 key.entries = c(50000,100000,150000,200000,250000)
@@ -72,38 +83,6 @@ bubbleMap(lat.lon.map,
           key.entries = key.entries,
           max.radius = 100,
           do.sqrt = F);
-#points( tmp$newX , tmp$newY , col="red" )
-
-#get the margin axis
-tmp.left.down = LatLon2XY.centered(MyMap = DefineMap, 
-                   lat = DefineMap$BBOX$ll[1], 
-                   lon = DefineMap$BBOX$ll[2], 
-                   zoom = zoom)
-
-tmp.right.up = LatLon2XY.centered(MyMap = DefineMap, 
-                         lat = DefineMap$BBOX$ur[1], 
-                         lon = DefineMap$BBOX$ur[2], 
-                         zoom = zoom)
-#points( tmp.left.down$newX , tmp.left.down$newY , cex = 3 , col="red" , pch=16)
-xlim = c( tmp.left.down$newX , tmp.right.up$newX )
-ylim = c( tmp.left.down$newY , tmp.right.up$newY )
-par(new=T)
-kriging:::image.kriging(kriged, 
-                        xlim = xlim,
-                        ylim = ylim,
-                        #col=heat.colors(100, alpha = 0.5)
-                        col=terrain.colors(100, alpha = 0.5)
-                        )
-###########################################
-newx=seq(min(kriged$map$x), max(kriged$map$x), length=50)
-newy=seq(min(kriged$map$y), max(kriged$map$y), length=50)
-Predic = kriging2(x=kriged$map$x, 
-                  y=kriged$map$y, 
-                  response=kriged$map$pred
-                  )
-#######################
-
-
 
 
 
